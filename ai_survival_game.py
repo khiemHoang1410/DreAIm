@@ -8,16 +8,47 @@ import os
 import random
 import time
 import json
-from groq import Groq
 from colorama import init, Fore, Back, Style
 
 init(autoreset=True)
 
 # ========== CONFIG ==========
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")  # Đặt key trong file .env hoặc biến môi trường
-MODEL = "llama-3.3-70b-versatile"
+# Đổi AI_PROVIDER trong file .env: "groq" hoặc "gemini"
+AI_PROVIDER = os.environ.get("AI_PROVIDER", "groq").lower()
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL   = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL   = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+
+MODEL = GROQ_MODEL if AI_PROVIDER == "groq" else GEMINI_MODEL
+
 DELAY_BETWEEN_TURNS = 1.5  # giây, tránh rate limit
 MAX_TURNS = 30
+
+# ========== AI CLIENT FACTORY ==========
+def create_client():
+    if AI_PROVIDER == "groq":
+        from groq import Groq
+        return Groq(api_key=GROQ_API_KEY)
+    else:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        return genai.GenerativeModel(GEMINI_MODEL)
+
+def chat_completion(client, prompt: str) -> str:
+    """Gọi API thống nhất, trả về string response."""
+    if AI_PROVIDER == "groq":
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.9, max_tokens=300,
+        )
+        return resp.choices[0].message.content.strip()
+    else:
+        resp = client.generate_content(prompt)
+        return resp.text.strip()
 
 # ========== COLORS cho từng agent ==========
 AGENT_COLORS = [
@@ -226,21 +257,11 @@ Trả về JSON với format sau (CHỈ JSON, không text thêm):
 """
 
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.9,
-            max_tokens=300,
-        )
-        raw = response.choices[0].message.content.strip()
-        
-        # Parse JSON
-        # Tìm JSON trong response
+        raw = chat_completion(client, prompt)
         start = raw.find('{')
         end = raw.rfind('}') + 1
         if start >= 0 and end > start:
-            json_str = raw[start:end]
-            return json.loads(json_str)
+            return json.loads(raw[start:end])
     except Exception as e:
         log_system(f"API error for {agent.name}: {e}")
     
@@ -440,7 +461,8 @@ def main():
 {Style.RESET_ALL}""")
 
     # Init client
-    client = Groq(api_key=GROQ_API_KEY)
+    client = create_client()
+    log_system(f"AI Provider: {AI_PROVIDER.upper()} | Model: {MODEL}")
     
     # Init agents
     agents = [Agent(template, idx) for idx, template in enumerate(AGENT_TEMPLATES)]
