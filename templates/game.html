@@ -194,6 +194,13 @@
     filter: grayscale(0.85); 
     border-left-color: #475569 !important;
   }
+  .agent-card.active-turn {
+    border-color: var(--neon-border) !important;
+    border-left-width: 6px !important;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--neon-border);
+    background: rgba(30, 41, 59, 0.7) !important;
+    transform: translateY(-2px) scale(1.015);
+  }
   .agent-card:hover:not(.dead) { 
     border-color: rgba(255,255,255,0.15); 
     border-left-color: var(--neon-border);
@@ -383,6 +390,69 @@
   @keyframes spawnAvatar {
     from { opacity: 0; transform: scale(0.6) translateY(10px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* AGENT BUBBLES ON MAP */
+  .agent-bubble {
+    position: absolute;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1.5px solid var(--agent-color);
+    border-radius: 10px;
+    padding: 8px 12px;
+    width: 200px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #f1f5f9;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 8px var(--agent-color);
+    z-index: 100;
+    pointer-events: none;
+    animation: fadeInBubble 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .agent-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent;
+  }
+  .agent-bubble.thinking-style {
+    border-style: dotted;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: rgba(15, 23, 42, 0.85);
+    width: 130px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    animation: pulseThinking 1.5s infinite ease-in-out;
+  }
+  .agent-bubble.thought-style {
+    border-style: dashed;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 12px;
+  }
+  .agent-bubble.dialogue-style {
+    border-style: solid;
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 11.5px;
+    background: rgba(10, 15, 30, 0.98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 12px var(--agent-color);
+  }
+
+  @keyframes fadeInBubble {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+  @keyframes pulseThinking {
+    0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(0.98); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.02); }
   }
   .avatar-circle {
     width: 44px;
@@ -613,6 +683,28 @@
 let evtSource = null;
 let agentColors = {};
 let filterMode = 'all';
+let activeTurnAgent = null;
+let activeBubbles = {}; // { agentName: { text, styleClass } }
+
+function setAgentBubble(agentName, text, styleClass) {
+  activeBubbles[agentName] = { text: text, styleClass: styleClass };
+  
+  const avatar = document.querySelector(`.map-avatar[data-agent="${agentName}"]`);
+  if (!avatar) return;
+
+  const oldBubble = avatar.querySelector('.agent-bubble');
+  if (oldBubble) oldBubble.remove();
+
+  const bubble = document.createElement('div');
+  bubble.className = `agent-bubble ${styleClass}`;
+  bubble.textContent = text;
+  avatar.appendChild(bubble);
+}
+
+function clearAllBubbles() {
+  activeBubbles = {};
+  document.querySelectorAll('.agent-bubble').forEach(b => b.remove());
+}
 const SHOW_TYPES = {
   all:    null,
   combat: ['combat','death'],
@@ -704,13 +796,14 @@ function updateAgents(agents) {
     const pct = Math.max(0, (a.hp / a.max_hp) * 100);
     const hpClass = pct > 60 ? '' : pct > 30 ? 'medium' : 'low';
     const deadClass = a.alive ? '' : 'dead';
+    const activeTurnClass = (a.name === activeTurnAgent) ? 'active-turn' : '';
 
     const allies = a.allies.map(n => `<span class="rel-tag rel-ally">🤝 ${n}</span>`).join('');
     const enemies = a.enemies.map(n => `<span class="rel-tag rel-enemy">⚔️ ${n}</span>`).join('');
 
     // Render thông tin vào cột trái
     container.innerHTML += `
-    <div class="agent-card ${deadClass}" style="--neon-border: ${a.color}">
+    <div class="agent-card ${deadClass} ${activeTurnClass}" data-agent="${a.name}" style="--neon-border: ${a.color}">
       <div class="agent-header">
         <div class="agent-dot" style="background:${a.color};box-shadow:0 0 8px ${a.color}"></div>
         <div class="agent-name" style="color:${a.color}">${a.name}</div>
@@ -737,7 +830,7 @@ function updateAgents(agents) {
       const locContainer = document.querySelector(`.location-tile[data-location="${a.location}"] .location-agents`);
       if (locContainer) {
         locContainer.innerHTML += `
-        <div class="map-avatar" style="--agent-color: ${a.color}">
+        <div class="map-avatar" data-agent="${a.name}" style="--agent-color: ${a.color}">
           <div class="avatar-circle" style="border-color: ${a.color}; color: ${a.color}">${a.name[0]}</div>
           <div class="avatar-hp-bar"><div class="avatar-hp-fill" style="width:${pct}%; background:${a.color}"></div></div>
           <div class="avatar-name">${a.name}</div>
@@ -745,6 +838,17 @@ function updateAgents(agents) {
       }
     }
   });
+
+  // Khôi phục bong bóng thoại/suy nghĩ đang hiển thị sau khi bản đồ được vẽ lại
+  for (const name in activeBubbles) {
+    const avatar = document.querySelector(`.map-avatar[data-agent="${name}"]`);
+    if (avatar) {
+      const bubble = document.createElement('div');
+      bubble.className = `agent-bubble ${activeBubbles[name].styleClass}`;
+      bubble.textContent = activeBubbles[name].text;
+      avatar.appendChild(bubble);
+    }
+  }
 }
 
 function startGame() {
@@ -754,6 +858,8 @@ function startGame() {
     document.getElementById('btn-stop').disabled = false;
     document.getElementById('status-dot').className = 'status-dot running';
     allLogs = [];
+    activeTurnAgent = null;
+    clearAllBubbles();
     document.getElementById('log-body').innerHTML = '';
     document.getElementById('agents-list').innerHTML = '';
     connectStream();
@@ -780,6 +886,9 @@ function stopGame() {
     document.getElementById('btn-pause').disabled = true;
     document.getElementById('btn-stop').disabled = true;
     document.getElementById('status-dot').className = 'status-dot';
+    activeTurnAgent = null;
+    clearAllBubbles();
+    document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
     if (evtSource) { evtSource.close(); evtSource = null; }
   });
 }
@@ -798,6 +907,24 @@ function connectStream() {
     appendLogEntry(data);
 
     // --- Xử lý Hiệu ứng Đồ họa dựa trên Metadata sự kiện ---
+    if (data.type === 'thinking') {
+      activeTurnAgent = data.agent;
+      // Cập nhật highlight thẻ nhân vật ở cột trái
+      document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
+      const card = document.querySelector(`.agent-card[data-agent="${data.agent}"]`);
+      if (card) card.classList.add('active-turn');
+
+      // Reset tất cả bong bóng của các Agent khác, tạo bong bóng suy nghĩ cho Agent hiện tại
+      clearAllBubbles();
+      setAgentBubble(data.agent, '⚡ Đang suy nghĩ...', 'thinking-style');
+    }
+    else if (data.type === 'thought' && data.extra && data.extra.reasoning) {
+      setAgentBubble(data.agent, `💭 ${data.extra.reasoning}`, 'thought-style');
+    }
+    else if (data.type === 'dialogue' && data.extra && data.extra.dialogue) {
+      setAgentBubble(data.agent, `🗣️ "${data.extra.dialogue}"`, 'dialogue-style');
+    }
+
     if (data.extra && data.extra.location) {
       const loc = data.extra.location;
       
@@ -824,6 +951,11 @@ function connectStream() {
       document.getElementById('btn-pause').disabled = true;
       document.getElementById('btn-stop').disabled = true;
       document.getElementById('status-dot').className = 'status-dot';
+      
+      // Xóa tất cả các trạng thái hoạt động khi kết thúc game
+      activeTurnAgent = null;
+      document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
+      clearAllBubbles();
     }
   };
 }

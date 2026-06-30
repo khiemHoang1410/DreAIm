@@ -9,6 +9,13 @@ import time
 import threading
 import queue
 import concurrent.futures
+
+# Tự động load file .env nếu có
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv chưa cài, dùng biến môi trường hệ thống
 from flask import Flask, render_template, Response, jsonify, request
 
 # ========== CONFIG ==========
@@ -33,9 +40,8 @@ def create_client():
         from groq import Groq
         return Groq(api_key=GROQ_API_KEY)
     else:
-        import google.generativeai as genai
-        genai.configure(api_key=GEMINI_API_KEY)
-        return genai.GenerativeModel(GEMINI_MODEL)
+        from google import genai
+        return genai.Client(api_key=GEMINI_API_KEY)
 
 def chat_completion(client, prompt: str) -> str:
     """Gọi API thống nhất, trả về string response."""
@@ -47,7 +53,10 @@ def chat_completion(client, prompt: str) -> str:
         )
         return resp.choices[0].message.content.strip()
     else:
-        resp = client.generate_content(prompt)
+        resp = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+        )
         return resp.text.strip()
 
 app = Flask(__name__)
