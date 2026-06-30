@@ -3,967 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Survival Game - Visual Godmode</title>
-<!-- Import premium Google Fonts -->
+<title>AI Survival Arena — Cinematic Mode</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-primary: #020617;
-    --bg-secondary: #0f172a;
-    --bg-tertiary: #1e293b;
-    --border-color: rgba(255, 255, 255, 0.06);
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #ffd700;
+    --bg: #020817;
+    --panel: rgba(8, 18, 40, 0.85);
+    --border: rgba(255,255,255,0.06);
+    --accent: #f59e0b;
+    --text: #f1f5f9;
+    --muted: #64748b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 56px 130px 1fr 90px;
+    overflow: hidden;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { 
-    background: var(--bg-primary); 
-    color: var(--text-primary); 
-    font-family: 'Outfit', sans-serif; 
-    height: 100vh; 
-    overflow: hidden; 
-  }
-
-  /* HEADER */
-  .header { 
-    height: 70px;
-    background: rgba(15, 23, 42, 0.75); 
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color); 
-    padding: 0 24px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    z-index: 10;
-  }
-  .logo-area {
+  /* ===== HEADER ===== */
+  .header {
+    background: rgba(2,8,23,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
     display: flex;
     align-items: center;
     gap: 16px;
+    z-index: 20;
   }
-  .header h1 { 
-    font-size: 20px; 
-    font-weight: 800;
-    color: var(--accent); 
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); 
-    letter-spacing: 0.5px;
-  }
-  .turn-badge { 
-    background: rgba(30, 41, 59, 0.7); 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    border-radius: 8px; 
-    padding: 6px 14px; 
-    font-size: 13px; 
-    color: var(--text-secondary); 
-    font-family: 'Fira Code', monospace;
-  }
-  .turn-badge span { 
-    color: var(--accent); 
-    font-weight: bold; 
-  }
+  .logo { font-size: 17px; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px rgba(245,158,11,0.5); letter-spacing: 1px; }
+  .turn-badge { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-family: 'Fira Code', monospace; font-size: 12px; color: #94a3b8; }
+  .turn-badge span { color: var(--accent); font-weight: 700; }
+  .speed-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .speed-wrap span { color: var(--accent); font-weight: 700; font-family: 'Fira Code', monospace; }
+  input[type=range] { width: 80px; accent-color: var(--accent); cursor: pointer; }
+  .controls { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+  .btn { padding: 7px 16px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.06); font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
+  .btn-start { background: #16a34a; color: #fff; }
+  .btn-pause { background: #b45309; color: #fff; }
+  .btn-stop  { background: #991b1b; color: #fff; }
+  .btn:hover { opacity: .85; transform: translateY(-1px); }
+  .btn:disabled { opacity: .25; cursor: not-allowed; transform: none; }
+  .pulse-dot { width: 9px; height: 9px; border-radius: 50%; background: #334155; }
+  .pulse-dot.on  { background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: blink 1.8s infinite; }
+  .pulse-dot.pau { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .speed-control {
+  /* ===== AGENTS STATUS BAR ===== */
+  .agents-bar {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid var(--border-color);
-    padding: 6px 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(2, 10, 30, 0.9);
+    border-bottom: 1px solid var(--border);
+    z-index: 15;
   }
-  .speed-control label {
-    font-weight: 500;
-  }
-  .speed-control span {
-    color: var(--accent);
-    font-weight: bold;
-    font-family: 'Fira Code', monospace;
-  }
-  .speed-control input[type="range"] {
-    width: 100px;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-
-  .controls-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .btn { 
-    padding: 8px 18px; 
-    border: 1px solid rgba(255,255,255,0.05); 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-size: 13px; 
-    font-weight: 600; 
-    transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-start  { background: #22c55e; color: #020617; border-color: #4ade80; }
-  .btn-pause  { background: #eab308; color: #020617; border-color: #facc15; }
-  .btn-stop   { background: #ef4444; color: #ffffff; border-color: #f87171; }
-  .btn:hover  { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
-  .btn:active { transform: translateY(0); }
-  .btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none; box-shadow: none; }
-  
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 8px;
-  }
-  .status-dot { 
-    width: 10px; 
-    height: 10px; 
-    border-radius: 50%; 
-    background: #475569; 
-    box-shadow: 0 0 4px #475569;
-  }
-  .status-dot.running { 
-    background: #22c55e; 
-    box-shadow: 0 0 12px #22c55e; 
-    animation: pulse 1.8s infinite; 
-  }
-  .status-dot.paused  { 
-    background: #eab308; 
-    box-shadow: 0 0 12px #eab308; 
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-  /* LAYOUT */
-  .layout { 
-    display: grid; 
-    grid-template-columns: 330px 1fr 370px; 
-    height: calc(100vh - 70px); 
-    background: var(--bg-primary);
-  }
-
-  /* PANEL BASICS */
-  .panel-header {
-    padding: 14px 20px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border-color);
-    background: rgba(15, 23, 42, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  /* LEFT PANEL - Agents */
-  .agents-panel { 
-    background: var(--bg-secondary); 
-    border-right: 1px solid var(--border-color); 
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .agents-list-scroll {
+  .agent-status-card {
     flex: 1;
-    overflow-y: auto;
-    padding: 16px;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 12px;
-  }
-  
-  .agent-card { 
-    background: rgba(30, 41, 59, 0.35); 
-    border: 1px solid var(--border-color); 
-    border-left: 4px solid var(--neon-border);
-    border-radius: 12px; 
-    padding: 14px; 
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
-  }
-  .agent-card.dead { 
-    opacity: 0.25; 
-    filter: grayscale(0.85); 
-    border-left-color: #475569 !important;
-  }
-  .agent-card.active-turn {
-    border-color: var(--neon-border) !important;
-    border-left-width: 6px !important;
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--neon-border);
-    background: rgba(30, 41, 59, 0.7) !important;
-    transform: translateY(-2px) scale(1.015);
-  }
-  .agent-card:hover:not(.dead) { 
-    border-color: rgba(255,255,255,0.15); 
-    border-left-color: var(--neon-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 8px var(--neon-border);
-    transform: translateY(-2px);
-  }
-  .agent-header { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-    margin-bottom: 10px; 
-  }
-  .agent-dot { 
-    width: 10px; 
-    height: 10px; 
-    border-radius: 50%; 
-    flex-shrink: 0; 
-  }
-  .agent-name { 
-    font-size: 16px; 
-    font-weight: 700; 
-    letter-spacing: 0.2px;
-  }
-  .agent-trait { 
-    font-size: 9px; 
-    font-weight: 700;
-    color: var(--text-secondary); 
-    background: rgba(255, 255, 255, 0.05); 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-    margin-left: auto; 
-    border: 1px solid rgba(255,255,255,0.02);
-  }
-
-  .hp-bar-wrap { 
-    background: rgba(255,255,255,0.05); 
-    border-radius: 4px; 
-    height: 6px; 
-    margin: 6px 0; 
-    overflow: hidden; 
-  }
-  .hp-bar { 
-    height: 100%; 
-    border-radius: 4px; 
-    transition: width .4s cubic-bezier(0.4, 0, 0.2, 1); 
-    background: linear-gradient(90deg, #10b981, #34d399); 
-  }
-  .hp-bar.medium { background: linear-gradient(90deg, #eab308, #fbbf24); }
-  .hp-bar.low    { background: linear-gradient(90deg, #ef4444, #f87171); }
-
-  .agent-stats { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 6px; 
-    font-size: 11px; 
-    color: var(--text-secondary); 
-    margin-top: 8px;
-    background: rgba(0,0,0,0.15);
-    padding: 8px;
-    border-radius: 8px;
-  }
-  .stat { 
-    display: flex; 
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .stat span:first-child { color: var(--text-muted); font-size: 9px; text-transform: uppercase; }
-  .stat span:last-child { color: var(--text-primary); font-weight: 600; font-family: 'Fira Code', monospace; }
-
-  .agent-location { 
-    font-size: 11px; 
-    color: var(--text-muted); 
-    margin-top: 10px; 
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .agent-location span { 
-    color: #60a5fa; 
-    font-weight: 500;
-  }
-
-  .agent-dialogue { 
-    font-size: 11.5px; 
-    color: #cbd5e1; 
-    margin-top: 10px; 
-    font-style: italic; 
-    border-left: 2px solid rgba(255,255,255,0.15); 
-    padding-left: 10px; 
-    min-height: 16px; 
-    line-height: 1.4;
-  }
-
-  .relations { 
-    display: flex; 
-    gap: 6px; 
-    flex-wrap: wrap; 
-    margin-top: 10px; 
-  }
-  .rel-tag { 
-    font-size: 10px; 
-    padding: 2px 8px; 
-    border-radius: 12px; 
-    font-weight: 500;
-  }
-  .rel-ally   { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-  .rel-enemy  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-
-  /* CENTER PANEL - Map */
-  .arena-panel {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-primary);
+    padding: 10px 14px;
+    background: rgba(15,25,50,0.6);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ac);
+    border-radius: 12px;
+    transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
     overflow: hidden;
   }
-  .map-container {
+  .agent-status-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 50%, var(--ac) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .agent-status-card.active-turn {
+    border-color: var(--ac);
+    box-shadow: 0 0 30px rgba(var(--ac-rgb), 0.35), inset 0 0 20px rgba(var(--ac-rgb), 0.05);
+    transform: translateY(-3px) scale(1.01);
+    background: rgba(15,25,50,0.9);
+  }
+  .agent-status-card.active-turn::before { opacity: 0.08; }
+  .agent-status-card.dead-card { opacity: 0.2; filter: grayscale(1); border-left-color: #334155; transform: none !important; }
+
+  .av-big { width: 52px; height: 52px; border-radius: 50%; border: 2.5px solid var(--ac); background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--ac); flex-shrink: 0; box-shadow: 0 0 12px var(--ac); position: relative; z-index: 1; transition: box-shadow 0.5s; }
+  .agent-status-card.active-turn .av-big { box-shadow: 0 0 25px var(--ac), 0 0 50px rgba(var(--ac-rgb), 0.3); animation: avatarPulse 1.5s infinite ease-in-out; }
+  @keyframes avatarPulse { 0%,100%{box-shadow:0 0 20px var(--ac)} 50%{box-shadow:0 0 40px var(--ac), 0 0 60px rgba(var(--ac-rgb),.4)} }
+
+  .agent-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+  .agent-info-top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .a-name { font-size: 15px; font-weight: 800; color: var(--ac); }
+  .a-trait { font-size: 9px; font-weight: 700; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; color: #94a3b8; }
+  .hp-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .hp-track { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .hp-fill { height: 100%; border-radius: 3px; transition: width .5s; background: linear-gradient(90deg, #10b981, #34d399); }
+  .hp-fill.med { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+  .hp-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); animation: hpCrit 0.8s infinite; }
+  @keyframes hpCrit { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .hp-text { font-size: 10px; color: #94a3b8; font-family: 'Fira Code', monospace; white-space: nowrap; }
+  .a-stats { display: flex; gap: 8px; font-size: 10px; color: var(--muted); }
+  .a-stats span { color: #cbd5e1; font-weight: 600; }
+  .a-quote { font-size: 10.5px; color: #94a3b8; font-style: italic; margin-top: 5px; border-left: 2px solid rgba(255,255,255,0.1); padding-left: 7px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .a-quote.thought { border-left-color: rgba(var(--ac-rgb),0.5); color: #cbd5e1; }
+
+  /* ===== ARENA ===== */
+  .arena-wrap {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #0a1628 0%, #020817 100%);
+  }
+  /* Spotlight overlay */
+  .spotlight {
+    position: absolute; inset: 0;
+    pointer-events: none; z-index: 10;
+    background: radial-gradient(ellipse 280px 240px at var(--sx,50%) var(--sy,50%), transparent 0%, rgba(0,0,0,0.72) 100%);
+    opacity: 0;
+    transition: opacity .6s ease, --sx .7s ease, --sy .7s ease;
+  }
+  .spotlight.on { opacity: 1; }
+  @property --sx { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+  @property --sy { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+
+  .map-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 1fr);
-    gap: 16px;
-    padding: 20px;
-    flex: 1;
-    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+    gap: 10px;
+    padding: 12px;
+    height: 100%;
   }
 
-  .location-tile {
-    background: rgba(15, 23, 42, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+  /* Location tiles with unique vibes */
+  .tile {
     border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: relative; overflow: visible;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
   }
-  /* Glowing background effect for locations */
-  .location-tile::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    border-radius: 16px;
-    box-shadow: 0 0 30px var(--loc-glow);
-    opacity: 0.12;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-  }
-  .location-tile:hover {
-    background: rgba(15, 23, 42, 0.7);
-    border-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-  }
-  .location-tile:hover::before {
-    opacity: 0.3;
-  }
+  .tile[data-loc="Rừng Tối"]       { background: radial-gradient(ellipse at bottom, #0f2210 0%, #050e0a 100%); border-color: #14532d44; }
+  .tile[data-loc="Lâu Đài Hoang"]  { background: radial-gradient(ellipse at top,    #1a0f2e 0%, #0a0714 100%); border-color: #4c1d9544; }
+  .tile[data-loc="Đầm Lầy"]        { background: radial-gradient(ellipse at bottom, #0f1a0a 0%, #080f06 100%); border-color: #3f620444; }
+  .tile[data-loc="Đèo Núi"]        { background: radial-gradient(ellipse at top,    #0c1a2e 0%, #06101e 100%); border-color: #1e3a5f44; }
+  .tile[data-loc="Làng Bỏ Hoang"]  { background: radial-gradient(ellipse at bottom, #1e1005 0%, #100a02 100%); border-color: #78350f44; }
+  .tile[data-loc="Hang Động"]       { background: radial-gradient(ellipse at top,    #1a0808 0%, #0e0404 100%); border-color: #7f1d1d44; }
 
-  .location-name {
-    font-family: 'Outfit', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: #f1f5f9;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding-bottom: 8px;
+  .tile.active-loc {
+    border-color: rgba(255,255,255,0.25) !important;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.05);
+    z-index: 11;
   }
-  .location-agents {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
+  .tile.combat-shake { animation: tileShake 0.5s ease; }
+  @keyframes tileShake { 0%,100%{transform:none} 20%,60%{transform:translate(-4px,2px)rotate(-.5deg)} 40%,80%{transform:translate(4px,-2px)rotate(.5deg)} }
+  .tile.combat-flash::after {
+    content:''; position:absolute; inset:0; border-radius:16px;
+    background: radial-gradient(ellipse at center, rgba(239,68,68,0.3) 0%, transparent 70%);
+    animation: flashFade 0.6s ease forwards; pointer-events:none;
+  }
+  .tile.heal-flash::after {
+    content:''; position:absolute; inset:0; border-radius:16px;
+    background: radial-gradient(ellipse at center, rgba(16,185,129,0.25) 0%, transparent 70%);
+    animation: flashFade 0.8s ease forwards; pointer-events:none;
+  }
+  @keyframes flashFade { 0%{opacity:1} 100%{opacity:0} }
+
+  .tile-name {
+    padding: 8px 12px 4px;
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase; letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .tile-body {
     flex: 1;
+    display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 8px;
   }
 
-  /* AVATAR ON MAP */
-  .map-avatar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  /* Map avatars */
+  .map-av {
+    display: flex; flex-direction: column; align-items: center;
     position: relative;
-    animation: spawnAvatar 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    margin: 4px;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
   }
-  @keyframes spawnAvatar {
-    from { opacity: 0; transform: scale(0.6) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+  @keyframes popIn { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
+  .map-av-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 2.5px solid var(--ac);
+    background: rgba(5,10,25,0.9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; color: var(--ac);
+    box-shadow: 0 0 10px var(--ac);
+    transition: all 0.4s;
+    cursor: default;
   }
+  .map-av.is-active .map-av-circle {
+    box-shadow: 0 0 20px var(--ac), 0 0 40px rgba(var(--ac-rgb),.4);
+    border-width: 3px;
+    animation: avGlow 1.5s infinite ease-in-out;
+  }
+  @keyframes avGlow { 0%,100%{box-shadow:0 0 15px var(--ac)} 50%{box-shadow:0 0 35px var(--ac), 0 0 50px rgba(var(--ac-rgb),.5)} }
+  .map-av-hp { width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .map-av-hp-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+  .map-av-label { font-size: 9.5px; color: rgba(255,255,255,0.45); margin-top: 2px; font-weight: 600; letter-spacing: 0.5px; }
 
-  /* AGENT BUBBLES ON MAP */
-  .agent-bubble {
+  /* Speech bubble on map avatar */
+  .av-bubble {
     position: absolute;
-    bottom: 64px;
-    left: 50%;
+    bottom: 70px; left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.95);
-    border: 1.5px solid var(--agent-color);
+    background: rgba(5,10,25,0.97);
+    border: 1.5px solid var(--ac);
     border-radius: 10px;
-    padding: 8px 12px;
-    width: 200px;
-    font-size: 11px;
-    line-height: 1.4;
-    color: #f1f5f9;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 8px var(--agent-color);
-    z-index: 100;
-    pointer-events: none;
-    animation: fadeInBubble 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-  .agent-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px 6px 0;
-    border-style: solid;
-    border-color: rgba(15, 23, 42, 0.95) transparent transparent;
-  }
-  .agent-bubble.thinking-style {
-    border-style: dotted;
-    color: var(--text-secondary);
-    font-style: italic;
-    background: rgba(15, 23, 42, 0.85);
-    width: 130px;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    animation: pulseThinking 1.5s infinite ease-in-out;
-  }
-  .agent-bubble.thought-style {
-    border-style: dashed;
+    padding: 7px 11px;
+    width: 210px;
+    font-size: 11px; line-height: 1.45;
     color: #e2e8f0;
-    background: rgba(15, 23, 42, 0.95);
-    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.8), 0 0 10px rgba(var(--ac-rgb),.3);
+    z-index: 50; pointer-events: none;
+    animation: bubblePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    word-break: break-word;
+    white-space: normal;
   }
-  .agent-bubble.dialogue-style {
-    border-style: solid;
-    font-weight: 600;
-    color: #ffffff;
-    font-size: 11.5px;
-    background: rgba(10, 15, 30, 0.98);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 12px var(--agent-color);
+  .av-bubble::after {
+    content:''; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+    border:7px solid transparent; border-top-color: rgba(5,10,25,0.97);
+  }
+  .av-bubble::before {
+    content:''; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+    border:8px solid transparent; border-top-color: var(--ac);
+  }
+  .av-bubble.thinking { border-style: dotted; font-style: italic; color: #94a3b8; animation: thinkPulse 1.5s infinite ease-in-out; }
+  .av-bubble.thought  { border-style: dashed; color: #e2e8f0; }
+  .av-bubble.speech   { border-style: solid; font-weight: 600; color: #fff; font-size: 11.5px; box-shadow: 0 6px 25px rgba(0,0,0,0.9), 0 0 15px rgba(var(--ac-rgb),.5); }
+  @keyframes bubblePop { from{opacity:0;transform:translateX(-50%) scale(0.85) translateY(8px)} to{opacity:1;transform:translateX(-50%) scale(1) translateY(0)} }
+  @keyframes thinkPulse { 0%,100%{opacity:.7;transform:translateX(-50%) scale(.98)} 50%{opacity:1;transform:translateX(-50%) scale(1.01)} }
+
+  /* Floating damage text */
+  .float-txt {
+    position: absolute; left: 50%; top: 40%;
+    transform: translate(-50%,-50%);
+    font-weight: 900; font-size: 26px;
+    pointer-events: none; z-index: 60;
+    animation: floatUp 1.5s ease-out forwards;
+    text-shadow: 0 0 10px currentColor, 0 2px 4px rgba(0,0,0,1);
+  }
+  .float-txt.dmg   { color: #ef4444; }
+  .float-txt.heal  { color: #10b981; }
+  .float-txt.death { color: #fca5a5; font-size: 28px; }
+  @keyframes floatUp {
+    0%  { opacity:0; transform:translate(-50%,-10%) scale(.6); }
+    20% { opacity:1; transform:translate(-50%,-55%) scale(1.3); }
+    40% { opacity:1; transform:translate(-50%,-65%) scale(1); }
+    100%{ opacity:0; transform:translate(-50%,-130%) scale(.85); }
   }
 
-  @keyframes fadeInBubble {
-    from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-  }
-  @keyframes pulseThinking {
-    0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(0.98); }
-    50% { opacity: 1; transform: translateX(-50%) scale(1.02); }
-  }
-  .avatar-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 2px solid var(--agent-color);
-    background: rgba(15, 23, 42, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 8px var(--agent-color);
-    transition: all 0.3s ease;
-  }
-  .avatar-hp-bar {
-    width: 40px;
-    height: 4px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 2px;
-    margin-top: 5px;
-    overflow: hidden;
-  }
-  .avatar-hp-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-  .avatar-name {
-    font-size: 10.5px;
-    color: #94a3b8;
-    margin-top: 2px;
-    font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  }
-
-  /* FLOATING TEXT ANIMATION */
-  .floating-text {
-    position: absolute;
-    left: 50%;
-    top: 45%;
-    transform: translate(-50%, -50%);
-    font-weight: 800;
-    font-family: 'Outfit', sans-serif;
-    font-size: 24px;
+  /* ===== DEATH OVERLAY ===== */
+  .death-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0);
     pointer-events: none;
-    z-index: 100;
-    animation: floatUpAndFade 1.4s forwards ease-out;
-    text-shadow: 0 0 10px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,0.8);
+    transition: background 0.3s;
   }
-  .floating-text.damage { color: #ef4444; }
-  .floating-text.heal { color: #10b981; }
-  .floating-text.death { color: #fca5a5; font-size: 26px; }
-  @keyframes floatUpAndFade {
-    0% { opacity: 0; transform: translate(-50%, -10%) scale(0.6); }
-    15% { opacity: 1; transform: translate(-50%, -40%) scale(1.3); }
-    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
-    100% { opacity: 0; transform: translate(-50%, -110%) scale(0.85); }
+  .death-overlay.active { background: rgba(0,0,0,0.7); }
+  .death-card {
+    background: linear-gradient(135deg, #1a0505, #300a0a);
+    border: 2px solid #ef4444;
+    border-radius: 20px;
+    padding: 40px 60px;
+    text-align: center;
+    box-shadow: 0 0 80px rgba(239,68,68,0.4), 0 0 200px rgba(239,68,68,0.1);
+    transform: scale(0.5) translateY(40px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
   }
+  .death-overlay.active .death-card { transform: scale(1) translateY(0); opacity: 1; }
+  .death-skull { font-size: 64px; animation: skullSpin 0.6s ease-out; }
+  @keyframes skullSpin { from{transform:rotate(-20deg) scale(0.5)} to{transform:rotate(0) scale(1)} }
+  .death-title { font-size: 28px; font-weight: 900; color: #ef4444; margin: 12px 0 8px; letter-spacing: 2px; }
+  .death-text  { font-size: 16px; color: #fca5a5; }
+  .death-sub   { font-size: 13px; color: #94a3b8; margin-top: 8px; }
 
-  /* SHAKE LOCATION TILE */
-  .shake-anim {
-    animation: shakeTile 0.5s ease-in-out;
+  /* ===== KILL FEED ===== */
+  .kill-feed {
+    position: fixed; top: 66px; right: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 30; pointer-events: none;
   }
-  @keyframes shakeTile {
-    0%, 100% { transform: scale(1); }
-    10%, 50%, 90% { transform: translate(-4px, 2px) rotate(-0.5deg); }
-    30%, 70% { transform: translate(4px, -2px) rotate(0.5deg); }
+  .kf-entry {
+    background: rgba(5,10,25,0.9);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 11.5px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    animation: slideLeft 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
   }
+  @keyframes slideLeft { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
 
-  /* RIGHT PANEL - Log */
-  .log-panel { 
-    display: flex; 
-    flex-direction: column; 
-    background: var(--bg-secondary);
-    border-left: 1px solid var(--border-color);
+  /* ===== SUBTITLE BAR ===== */
+  .subtitle-bar {
+    background: rgba(2,8,23,0.97);
+    border-top: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 3px;
+    z-index: 20;
     overflow: hidden;
-    height: 100%;
   }
-  .log-filter { 
-    display: flex; 
-    gap: 6px; 
+  .sub-entry {
+    font-size: 12.5px; line-height: 1.4;
+    display: flex; align-items: center; gap: 8px;
+    animation: subFadeIn 0.3s ease;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .filter-btn { 
-    background: rgba(255,255,255,0.03); 
-    border: 1px solid var(--border-color); 
-    color: var(--text-secondary); 
-    padding: 4px 10px; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    font-size: 11px; 
-    font-weight: 500;
-    transition: all .2s;
-  }
-  .filter-btn:hover {
-    background: rgba(255,255,255,0.06);
-    color: var(--text-primary);
-  }
-  .filter-btn.active { 
-    background: rgba(255, 215, 0, 0.15); 
-    border-color: var(--accent); 
-    color: var(--accent); 
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
-  }
+  @keyframes subFadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .sub-entry .sub-tag { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
+  .sub-entry.combat-sub  .sub-tag { background: rgba(239,68,68,.2); color: #f87171; }
+  .sub-entry.death-sub   .sub-tag { background: rgba(239,68,68,.4); color: #fca5a5; font-size: 11px; }
+  .sub-entry.drama-sub   .sub-tag { background: rgba(168,85,247,.2); color: #c084fc; }
+  .sub-entry.thought-sub .sub-tag { background: rgba(99,102,241,.15); color: #a5b4fc; }
+  .sub-entry.action-sub  .sub-tag { background: rgba(14,165,233,.15); color: #7dd3fc; }
+  .sub-entry.event-sub   .sub-tag { background: rgba(245,158,11,.15); color: #fcd34d; }
+  .sub-entry.dialogue-sub .sub-tag { background: rgba(16,185,129,.15); color: #6ee7b7; }
+  .sub-time { font-size: 10px; color: var(--muted); font-family: 'Fira Code', monospace; flex-shrink: 0; }
 
-  .log-body { 
-    flex: 1; 
-    overflow-y: auto; 
-    padding: 16px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
-  }
-  .log-entry { 
-    padding: 10px 14px; 
-    border-radius: 10px; 
-    font-size: 13px; 
-    line-height: 1.5; 
-    animation: fadeInLog .35s ease; 
-    border-left: 4px solid transparent; 
-    background: rgba(30, 41, 59, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.02);
-    border-left-width: 4px;
-  }
-  @keyframes fadeInLog { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-
-  .log-entry.turn     { background: rgba(255, 215, 0, 0.06); border-left-color: var(--accent); color: var(--accent); font-weight: bold; margin: 12px 0 4px; }
-  .log-entry.combat   { background: rgba(239, 68, 68, 0.05); border-left-color: #ef4444; color: #fca5a5; }
-  .log-entry.death    { background: rgba(220, 38, 38, 0.15); border-left-color: #ef4444; color: #ff8787; font-weight: 700; box-shadow: 0 0 10px rgba(239,68,68,0.15); }
-  .log-entry.drama    { background: rgba(168, 85, 247, 0.06); border-left-color: #c084fc; color: #e9d5ff; }
-  .log-entry.dialogue { background: rgba(16, 185, 129, 0.05); border-left-color: #10b981; color: #a7f3d0; }
-  .log-entry.thought  { background: rgba(30, 41, 59, 0.15); border-left-color: var(--text-muted); color: var(--text-secondary); font-style: italic; opacity: 0.85; }
-  .log-entry.action   { background: rgba(99, 102, 241, 0.05); border-left-color: #6366f1; color: #c7d2fe; }
-  .log-entry.event    { background: rgba(245, 158, 11, 0.05); border-left-color: #f59e0b; color: #fde68a; }
-  .log-entry.levelup  { background: rgba(6, 182, 212, 0.08); border-left-color: #06b6d4; color: #a5f3fc; font-weight: bold; }
-  .log-entry.system   { background: rgba(30, 41, 59, 0.1); border-left-color: var(--text-muted); color: var(--text-muted); font-size: 12px; }
-  .log-entry.gameover { background: rgba(255, 215, 0, 0.1); border-left-color: var(--accent); color: var(--accent); font-weight: 800; font-size: 15px; text-align: center; }
-  .log-entry.agent_turn { background: rgba(255,255,255,0.01); border-left-color: #475569; color: #94a3b8; font-size: 12px; opacity: 0.7; }
-
-  .log-time { font-size: 10px; color: var(--text-muted); margin-right: 8px; font-family: 'Fira Code', monospace; }
-  .log-agent-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 4px; margin-right: 6px; font-weight: bold; text-transform: uppercase; }
-
-  /* Scrollbar Customization */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg-primary); }
-  ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
 </style>
 </head>
 <body>
 
+<!-- ===== HEADER ===== -->
 <div class="header">
-  <div class="logo-area">
-    <h1>⚔️ AI SURVIVAL GAME</h1>
-    <div class="turn-badge">Lượt: <span id="turn-num">0</span> / 30</div>
+  <div class="logo">⚔ AI SURVIVAL ARENA</div>
+  <div class="turn-badge">Lượt <span id="turn-num">0</span> / 30</div>
+  <div class="speed-wrap">
+    Tốc độ <span id="speed-val">3</span>s
+    <input type="range" min="1" max="10" step="0.5" value="3" oninput="setSpeed(this.value)">
   </div>
-  
-  <div class="speed-control">
-    <label for="speed-range">Tốc độ: <span id="speed-val">3.0</span> giây</label>
-    <input type="range" id="speed-range" min="0.5" max="10.0" step="0.5" value="3.0" oninput="changeSpeed(this.value)">
-  </div>
-
-  <div class="controls-group">
-    <button class="btn btn-start"  id="btn-start"  onclick="startGame()">▶ Bắt đầu</button>
-    <button class="btn btn-pause"  id="btn-pause"  onclick="pauseGame()" disabled>⏸ Tạm dừng</button>
-    <button class="btn btn-stop"   id="btn-stop"   onclick="stopGame()"  disabled>⏹ Dừng</button>
-    <div class="status-indicator">
-      <div class="status-dot" id="status-dot"></div>
-    </div>
+  <div class="controls">
+    <button class="btn btn-start" id="btn-start" onclick="startGame()">▶ Bắt đầu</button>
+    <button class="btn btn-pause" id="btn-pause" onclick="pauseGame()" disabled>⏸ Pause</button>
+    <button class="btn btn-stop"  id="btn-stop"  onclick="stopGame()"  disabled>⏹ Dừng</button>
+    <div class="pulse-dot" id="pdot"></div>
   </div>
 </div>
 
-<div class="layout">
-  <!-- LEFT: Agents list -->
-  <div class="agents-panel">
-    <div class="panel-header">Nhân vật Arena</div>
-    <div class="agents-list-scroll" id="agents-list"></div>
-  </div>
+<!-- ===== AGENT STATUS BAR ===== -->
+<div class="agents-bar" id="agents-bar"></div>
 
-  <!-- CENTER: Arena Map -->
-  <div class="arena-panel">
-    <div class="panel-header">Bản đồ Đấu Trường (Live)</div>
-    <div class="map-container">
-      <div class="location-tile" data-location="Rừng Tối" style="--loc-glow: rgba(34, 197, 94, 0.2)">
-        <div class="location-name">🌲 Rừng Tối</div>
-        <div class="location-agents"></div>
-      </div>
-      <div class="location-tile" data-location="Lâu Đài Hoang" style="--loc-glow: rgba(168, 85, 247, 0.2)">
-        <div class="location-name">🏰 Lâu Đài Hoang</div>
-        <div class="location-agents"></div>
-      </div>
-      <div class="location-tile" data-location="Đầm Lầy" style="--loc-glow: rgba(101, 163, 13, 0.2)">
-        <div class="location-name">🐊 Đầm Lầy</div>
-        <div class="location-agents"></div>
-      </div>
-      <div class="location-tile" data-location="Đèo Núi" style="--loc-glow: rgba(6, 182, 212, 0.2)">
-        <div class="location-name">🏔️ Đèo Núi</div>
-        <div class="location-agents"></div>
-      </div>
-      <div class="location-tile" data-location="Làng Bỏ Hoang" style="--loc-glow: rgba(245, 158, 11, 0.2)">
-        <div class="location-name">🏚️ Làng Bỏ Hoang</div>
-        <div class="location-agents"></div>
-      </div>
-      <div class="location-tile" data-location="Hang Động" style="--loc-glow: rgba(239, 68, 68, 0.2)">
-        <div class="location-name">🕳️ Hang Động</div>
-        <div class="location-agents"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RIGHT: Event Log -->
-  <div class="log-panel">
-    <div class="panel-header">
-      📜 Nhật ký sự kiện
-      <div class="log-filter">
-        <button class="filter-btn active" onclick="toggleFilter('all', this)">Tất cả</button>
-        <button class="filter-btn" onclick="toggleFilter('combat', this)">⚔️ Combat</button>
-        <button class="filter-btn" onclick="toggleFilter('drama', this)">🎭 Drama</button>
-        <button class="filter-btn" onclick="toggleFilter('event', this)">🎲 Sự kiện</button>
-      </div>
-    </div>
-    <div class="log-body" id="log-body"></div>
+<!-- ===== ARENA ===== -->
+<div class="arena-wrap">
+  <div class="spotlight" id="spotlight"></div>
+  <div class="map-grid">
+    <div class="tile" data-loc="Rừng Tối">       <div class="tile-name">🌲 Rừng Tối</div>       <div class="tile-body"></div></div>
+    <div class="tile" data-loc="Lâu Đài Hoang">  <div class="tile-name">🏰 Lâu Đài Hoang</div>  <div class="tile-body"></div></div>
+    <div class="tile" data-loc="Đầm Lầy">        <div class="tile-name">🐊 Đầm Lầy</div>        <div class="tile-body"></div></div>
+    <div class="tile" data-loc="Đèo Núi">        <div class="tile-name">🏔 Đèo Núi</div>         <div class="tile-body"></div></div>
+    <div class="tile" data-loc="Làng Bỏ Hoang">  <div class="tile-name">🏚 Làng Bỏ Hoang</div>  <div class="tile-body"></div></div>
+    <div class="tile" data-loc="Hang Động">       <div class="tile-name">🕳 Hang Động</div>        <div class="tile-body"></div></div>
   </div>
 </div>
+
+<!-- ===== SUBTITLE BAR ===== -->
+<div class="subtitle-bar" id="subtitle-bar"></div>
+
+<!-- ===== DEATH OVERLAY ===== -->
+<div class="death-overlay" id="death-overlay">
+  <div class="death-card">
+    <div class="death-skull" id="death-skull">💀</div>
+    <div class="death-title" id="death-title">ELIMINATED</div>
+    <div class="death-text"  id="death-text"></div>
+    <div class="death-sub"   id="death-sub"></div>
+  </div>
+</div>
+
+<!-- ===== KILL FEED ===== -->
+<div class="kill-feed" id="kill-feed"></div>
 
 <script>
-let evtSource = null;
-let agentColors = {};
-let filterMode = 'all';
-let activeTurnAgent = null;
-let activeBubbles = {}; // { agentName: { text, styleClass } }
+// ===== STATE =====
+let evtSrc = null;
+let agentData = {};        // { name: agentObj }
+let agentColors = {};      // { name: hex }
+let agentRgb = {};         // { name: "r,g,b" }
+let activeTurn = null;     // agent name currently on turn
+let activeBubbles = {};    // { name: { text, cls } }
+let subQueue = [];         // last 3 subtitle entries
+let killFeedItems = [];    // recent kills
+let allAgents = [];
 
-function setAgentBubble(agentName, text, styleClass) {
-  activeBubbles[agentName] = { text: text, styleClass: styleClass };
-  
-  const avatar = document.querySelector(`.map-avatar[data-agent="${agentName}"]`);
-  if (!avatar) return;
-
-  const oldBubble = avatar.querySelector('.agent-bubble');
-  if (oldBubble) oldBubble.remove();
-
-  const bubble = document.createElement('div');
-  bubble.className = `agent-bubble ${styleClass}`;
-  bubble.textContent = text;
-  avatar.appendChild(bubble);
+// ===== UTILS =====
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
 }
+function hpClass(pct) { return pct > 60 ? '' : pct > 30 ? 'med' : 'low'; }
 
-function clearAllBubbles() {
-  activeBubbles = {};
-  document.querySelectorAll('.agent-bubble').forEach(b => b.remove());
-}
-const SHOW_TYPES = {
-  all:    null,
-  combat: ['combat','death'],
-  drama:  ['drama','dialogue','thought'],
-  event:  ['event','levelup','gameover'],
-};
+// ===== REBUILD MAP =====
+function rebuildMap() {
+  // Clear all tile bodies
+  document.querySelectorAll('.tile .tile-body').forEach(b => b.innerHTML = '');
 
-function toggleFilter(mode, btn) {
-  filterMode = mode;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderAllLogs();
-}
-
-let allLogs = [];
-function renderAllLogs() {
-  const body = document.getElementById('log-body');
-  body.innerHTML = '';
-  const allowed = SHOW_TYPES[filterMode];
-  allLogs.forEach(entry => {
-    if (!allowed || allowed.includes(entry.type)) appendLogEntry(entry, false);
-  });
-  body.scrollTop = body.scrollHeight;
-}
-
-function appendLogEntry(entry, scroll=true) {
-  const body = document.getElementById('log-body');
-  const allowed = SHOW_TYPES[filterMode];
-  if (allowed && !allowed.includes(entry.type)) return;
-
-  const div = document.createElement('div');
-  div.className = `log-entry ${entry.type}`;
-
-  let agentTag = '';
-  if (entry.agent && agentColors[entry.agent]) {
-    agentTag = `<span class="log-agent-tag" style="background:${agentColors[entry.agent]}22;color:${agentColors[entry.agent]}">${entry.agent}</span>`;
-  }
-  div.innerHTML = `<span class="log-time">${entry.time||''}</span>${agentTag}${entry.msg}`;
-  body.appendChild(div);
-  if (scroll) body.scrollTop = body.scrollHeight;
-}
-
-// Hàm hiển thị chỉ số nổi (Floating Numbers) trên Map
-function showFloatingText(locationName, text, type) {
-  const tile = document.querySelector(`.location-tile[data-location="${locationName}"]`);
-  if (tile) {
-    const floatDiv = document.createElement('div');
-    floatDiv.className = `floating-text ${type}`;
-    floatDiv.textContent = text;
-    tile.appendChild(floatDiv);
-
-    // Hiệu ứng rung ô khu vực nếu bị sát thương hoặc tử nạn
-    if (type === 'damage' || type === 'death') {
-      tile.classList.add('shake-anim');
-      setTimeout(() => tile.classList.remove('shake-anim'), 500);
-    }
-
-    // Tự động xóa khỏi DOM sau khi kết thúc animation
-    setTimeout(() => {
-      floatDiv.remove();
-    }, 1400);
-  }
-}
-
-// Thay đổi tốc độ game gửi lên server
-function changeSpeed(val) {
-  document.getElementById('speed-val').textContent = val;
-  fetch('/set_speed', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ speed: parseFloat(val) })
-  })
-  .then(r => r.json())
-  .then(data => {
-    console.log("Cập nhật TURN_DELAY:", data.speed);
-  })
-  .catch(err => console.error("Lỗi cập nhật tốc độ:", err));
-}
-
-function updateAgents(agents) {
-  // Reset danh sách nhân vật trên từng ô bản đồ
-  document.querySelectorAll('.location-agents').forEach(el => el.innerHTML = '');
-
-  const container = document.getElementById('agents-list');
-  container.innerHTML = '';
-  
-  agents.forEach(a => {
-    agentColors[a.name] = a.color;
+  allAgents.forEach(a => {
+    if (!a.alive) return;
+    const tile = document.querySelector(`.tile[data-loc="${a.location}"] .tile-body`);
+    if (!tile) return;
     const pct = Math.max(0, (a.hp / a.max_hp) * 100);
-    const hpClass = pct > 60 ? '' : pct > 30 ? 'medium' : 'low';
-    const deadClass = a.alive ? '' : 'dead';
-    const activeTurnClass = (a.name === activeTurnAgent) ? 'active-turn' : '';
-
-    const allies = a.allies.map(n => `<span class="rel-tag rel-ally">🤝 ${n}</span>`).join('');
-    const enemies = a.enemies.map(n => `<span class="rel-tag rel-enemy">⚔️ ${n}</span>`).join('');
-
-    // Render thông tin vào cột trái
-    container.innerHTML += `
-    <div class="agent-card ${deadClass} ${activeTurnClass}" data-agent="${a.name}" style="--neon-border: ${a.color}">
-      <div class="agent-header">
-        <div class="agent-dot" style="background:${a.color};box-shadow:0 0 8px ${a.color}"></div>
-        <div class="agent-name" style="color:${a.color}">${a.name}</div>
-        <div class="agent-trait">${a.trait}</div>
-        ${!a.alive ? '<div style="font-size:11px;color:#cbd5e1;font-weight:bold;margin-left:8px">💀 DEAD</div>' : ''}
-      </div>
-      <div class="hp-bar-wrap"><div class="hp-bar ${hpClass}" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:var(--text-secondary);text-align:right;margin-bottom:6px">${a.hp}/${a.max_hp} HP</div>
-      <div class="agent-stats">
-        <div class="stat"><span>Cấp</span><span>${a.level}</span></div>
-        <div class="stat"><span>ATK</span><span>${a.attack}</span></div>
-        <div class="stat"><span>DEF</span><span>${a.defense}</span></div>
-        <div class="stat"><span>Kills</span><span>${a.kills}</span></div>
-        <div class="stat"><span>Vàng</span><span>${a.gold}</span></div>
-        <div class="stat"><span>Lượt</span><span>${a.survived_turns}</span></div>
-      </div>
-      <div class="agent-location">📍 Khu vực: <span>${a.location}</span></div>
-      ${(allies||enemies) ? `<div class="relations">${allies}${enemies}</div>` : ''}
-      <div class="agent-dialogue">${a.last_dialogue ? `"${a.last_dialogue}"` : ''}</div>
-    </div>`;
-
-    // Render Avatar đại diện lên Map cột giữa
-    if (a.alive) {
-      const locContainer = document.querySelector(`.location-tile[data-location="${a.location}"] .location-agents`);
-      if (locContainer) {
-        locContainer.innerHTML += `
-        <div class="map-avatar" data-agent="${a.name}" style="--agent-color: ${a.color}">
-          <div class="avatar-circle" style="border-color: ${a.color}; color: ${a.color}">${a.name[0]}</div>
-          <div class="avatar-hp-bar"><div class="avatar-hp-fill" style="width:${pct}%; background:${a.color}"></div></div>
-          <div class="avatar-name">${a.name}</div>
-        </div>`;
-      }
-    }
+    const rgb = agentRgb[a.name] || '255,255,255';
+    const isActive = a.name === activeTurn;
+    const div = document.createElement('div');
+    div.className = `map-av${isActive ? ' is-active' : ''}`;
+    div.dataset.agent = a.name;
+    div.style.cssText = `--ac:${a.color};--ac-rgb:${rgb}`;
+    div.innerHTML = `
+      <div class="map-av-circle">${a.name[0]}</div>
+      <div class="map-av-hp"><div class="map-av-hp-fill ${hpClass(pct)}" style="width:${pct}%;background:${a.color}"></div></div>
+      <div class="map-av-label">${a.name}</div>
+    `;
+    tile.appendChild(div);
   });
 
-  // Khôi phục bong bóng thoại/suy nghĩ đang hiển thị sau khi bản đồ được vẽ lại
+  // Restore bubbles
   for (const name in activeBubbles) {
-    const avatar = document.querySelector(`.map-avatar[data-agent="${name}"]`);
-    if (avatar) {
-      const bubble = document.createElement('div');
-      bubble.className = `agent-bubble ${activeBubbles[name].styleClass}`;
-      bubble.textContent = activeBubbles[name].text;
-      avatar.appendChild(bubble);
-    }
+    const av = document.querySelector(`.map-av[data-agent="${name}"]`);
+    if (!av) continue;
+    const b = document.createElement('div');
+    b.className = `av-bubble ${activeBubbles[name].cls}`;
+    b.style.setProperty('--ac', agentColors[name] || '#fff');
+    b.style.setProperty('--ac-rgb', agentRgb[name] || '255,255,255');
+    b.textContent = activeBubbles[name].text;
+    av.appendChild(b);
+  }
+
+  // Spotlight update
+  updateSpotlight();
+}
+
+// ===== REBUILD AGENTS BAR =====
+function rebuildAgentsBar() {
+  const bar = document.getElementById('agents-bar');
+  bar.innerHTML = '';
+  allAgents.forEach(a => {
+    const rgb = agentRgb[a.name] || '255,255,255';
+    const pct = Math.max(0, (a.hp / a.max_hp) * 100);
+    const isActive = a.name === activeTurn;
+    const isDead = !a.alive;
+    const card = document.createElement('div');
+    card.className = `agent-status-card${isActive?' active-turn':''}${isDead?' dead-card':''}`;
+    card.dataset.agent = a.name;
+    card.style.cssText = `--ac:${a.color};--ac-rgb:${rgb}`;
+    const allies = a.allies.map(n => `<span style="color:${agentColors[n]||'#aaa'}">${n}</span>`).join(' • ');
+    const enemies = a.enemies.map(n => `<span style="color:#ef4444">${n}</span>`).join(' • ');
+    const relStr = [allies ? `🤝 ${allies}` : '', enemies ? `⚔ ${enemies}` : ''].filter(Boolean).join('  ');
+    const quote = a.last_dialogue ? `"${a.last_dialogue}"` : (a.emotion ? `(${a.emotion})` : '');
+    card.innerHTML = `
+      <div class="av-big">${isDead ? '☠' : a.name[0]}</div>
+      <div class="agent-info">
+        <div class="agent-info-top">
+          <span class="a-name">${a.name}</span>
+          <span class="a-trait">${a.trait}</span>
+          ${isDead ? '<span style="font-size:10px;color:#ef4444;font-weight:700">DEAD</span>' : ''}
+        </div>
+        <div class="hp-row">
+          <div class="hp-track"><div class="hp-fill ${hpClass(pct)}" style="width:${pct}%"></div></div>
+          <div class="hp-text">${a.hp}/${a.max_hp}</div>
+        </div>
+        <div class="a-stats">Cấp <span>${a.level}</span> &nbsp; ATK <span>${a.attack}</span> &nbsp; Kills <span>${a.kills}</span></div>
+        ${relStr ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${relStr}</div>` : ''}
+        ${quote ? `<div class="a-quote">${quote}</div>` : ''}
+      </div>
+    `;
+    bar.appendChild(card);
+  });
+}
+
+// ===== SPOTLIGHT =====
+function updateSpotlight() {
+  const sp = document.getElementById('spotlight');
+  if (!activeTurn) { sp.classList.remove('on'); return; }
+  const agent = agentData[activeTurn];
+  if (!agent || !agent.alive) { sp.classList.remove('on'); return; }
+  const tile = document.querySelector(`.tile[data-loc="${agent.location}"]`);
+  if (!tile) { sp.classList.remove('on'); return; }
+  const wrap = document.querySelector('.arena-wrap');
+  const wr = wrap.getBoundingClientRect();
+  const tr = tile.getBoundingClientRect();
+  const cx = ((tr.left - wr.left + tr.width/2) / wr.width * 100).toFixed(1) + '%';
+  const cy = ((tr.top  - wr.top  + tr.height/2) / wr.height * 100).toFixed(1) + '%';
+  sp.style.setProperty('--sx', cx);
+  sp.style.setProperty('--sy', cy);
+  sp.classList.add('on');
+
+  // Highlight active tile
+  document.querySelectorAll('.tile').forEach(t => t.classList.remove('active-loc'));
+  tile.classList.add('active-loc');
+}
+
+// ===== BUBBLE =====
+function setBubble(name, text, cls) {
+  activeBubbles[name] = { text, cls };
+  const av = document.querySelector(`.map-av[data-agent="${name}"]`);
+  if (!av) return;
+  av.querySelectorAll('.av-bubble').forEach(b => b.remove());
+  const b = document.createElement('div');
+  b.className = `av-bubble ${cls}`;
+  b.style.setProperty('--ac', agentColors[name] || '#fff');
+  b.style.setProperty('--ac-rgb', agentRgb[name] || '255,255,255');
+  b.textContent = text;
+  av.appendChild(b);
+}
+function clearBubbles() {
+  activeBubbles = {};
+  document.querySelectorAll('.av-bubble').forEach(b => b.remove());
+}
+
+// ===== FLOATING TEXT =====
+function floatText(loc, text, cls) {
+  const tile = document.querySelector(`.tile[data-loc="${loc}"]`);
+  if (!tile) return;
+  const el = document.createElement('div');
+  el.className = `float-txt ${cls}`;
+  el.textContent = text;
+  tile.appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+
+// ===== TILE EFFECTS =====
+function tileEffect(loc, cls) {
+  const tile = document.querySelector(`.tile[data-loc="${loc}"]`);
+  if (!tile) return;
+  tile.classList.remove(cls);
+  void tile.offsetWidth; // reflow
+  tile.classList.add(cls);
+  setTimeout(() => tile.classList.remove(cls), 700);
+}
+
+// ===== DEATH OVERLAY =====
+function showDeath(victim, killer) {
+  const ov = document.getElementById('death-overlay');
+  document.getElementById('death-title').textContent = `${victim.toUpperCase()} ĐÃ BỊ HẠ GIÁN`;
+  document.getElementById('death-text').textContent = killer === 'plague' ? 'Chết vì dịch bệnh!' : `${killer} đã tiêu diệt!`;
+  document.getElementById('death-sub').textContent = 'Không còn người sống sót...';
+  ov.classList.add('active');
+  setTimeout(() => ov.classList.remove('active'), 3200);
+}
+
+// ===== KILL FEED =====
+function addKill(killer, victim, kColor, vColor) {
+  const kf = document.getElementById('kill-feed');
+  const el = document.createElement('div');
+  el.className = 'kf-entry';
+  el.innerHTML = `<span style="color:${kColor};font-weight:800">${killer}</span> <span style="color:#ef4444">💀</span> <span style="color:${vColor};text-decoration:line-through;opacity:.6">${victim}</span>`;
+  kf.prepend(el);
+  killFeedItems.push(el);
+  if (killFeedItems.length > 4) {
+    const old = killFeedItems.shift();
+    old.style.transition = 'opacity 0.5s';
+    old.style.opacity = '0';
+    setTimeout(() => old.remove(), 500);
   }
 }
 
+// ===== SUBTITLE BAR =====
+const SUB_TYPES = {
+  combat: 'combat-sub', death: 'death-sub', drama: 'drama-sub',
+  thought: 'thought-sub', action: 'action-sub', event: 'event-sub', dialogue: 'dialogue-sub'
+};
+const SUB_TAGS = {
+  combat: '⚔ COMBAT', death: '💀 DEATH', drama: '🎭 DRAMA',
+  thought: '💭 NỘI TÂM', action: '▶ HÀNH ĐỘNG', event: '🎲 SỰ KIỆN', dialogue: '🗣 THOẠI'
+};
+function pushSub(type, agentName, text) {
+  const bar = document.getElementById('subtitle-bar');
+  const tagCls  = SUB_TYPES[type] || 'action-sub';
+  const tagText = SUB_TAGS[type]  || type.toUpperCase();
+  const color = (agentName && agentColors[agentName]) ? agentColors[agentName] : '#94a3b8';
+  const el = document.createElement('div');
+  el.className = `sub-entry ${tagCls}`;
+  el.innerHTML = `
+    <span class="sub-tag">${tagText}</span>
+    ${agentName ? `<span style="color:${color};font-weight:700">${agentName}</span>` : ''}
+    <span style="color:#cbd5e1">${text}</span>
+  `;
+  bar.prepend(el);
+  subQueue.push(el);
+  while (subQueue.length > 5) {
+    const old = subQueue.shift();
+    old.remove();
+  }
+}
+
+// ===== EVENT HANDLING =====
+function onEvent(data) {
+  const { type, msg, agent, extra } = data;
+
+  if (type === 'state_update') { allAgents = data.agents; allAgents.forEach(a => { agentData[a.name]=a; agentColors[a.name]=a.color; agentRgb[a.name]=hexToRgb(a.color); }); rebuildMap(); rebuildAgentsBar(); return; }
+  if (type === 'ping') return;
+
+  // ---- THINKING ----
+  if (type === 'thinking') {
+    activeTurn = agent;
+    clearBubbles();
+    rebuildAgentsBar();
+    setBubble(agent, '⚡ đang suy nghĩ...', 'thinking');
+    updateSpotlight();
+    return;
+  }
+
+  // ---- THOUGHT (nội tâm) ----
+  if (type === 'thought') {
+    const reasoning = (extra && extra.reasoning) ? extra.reasoning : msg.replace('💭 ','');
+    setBubble(agent, `💭 ${reasoning}`, 'thought');
+    pushSub('thought', agent, reasoning);
+    return;
+  }
+
+  // ---- DIALOGUE (thoại miệng) ----
+  if (type === 'dialogue') {
+    const dlg = (extra && extra.dialogue) ? extra.dialogue : msg.replace(/^🗣️ /, '').replace(/^"|"$/g,'');
+    setBubble(agent, `🗣 "${dlg}"`, 'speech');
+    pushSub('dialogue', agent, `"${dlg}"`);
+    return;
+  }
+
+  // ---- COMBAT ----
+  if (type === 'combat' && extra) {
+    const loc = extra.location;
+    tileEffect(loc, 'combat-shake');
+    tileEffect(loc, 'combat-flash');
+    floatText(loc, `-${extra.damage} HP`, 'dmg');
+    pushSub('combat', agent, msg);
+    return;
+  }
+
+  // ---- DEATH ----
+  if (type === 'death' && extra) {
+    const loc = extra.location;
+    floatText(loc, '💀', 'death');
+    tileEffect(loc, 'combat-shake');
+    const kColor = agentColors[extra.killer] || '#ef4444';
+    const vColor = agentColors[extra.victim] || '#aaa';
+    if (extra.killer !== 'plague') addKill(extra.killer, extra.victim, kColor, vColor);
+    showDeath(extra.victim, extra.killer);
+    pushSub('death', extra.victim, msg);
+
+    // Rebuild to show dead agent greyed out
+    setTimeout(() => { rebuildMap(); rebuildAgentsBar(); }, 400);
+    return;
+  }
+
+  // ---- ACTION ----
+  if (type === 'action' && extra) {
+    const loc = extra.location;
+    const act = extra.action;
+    if (act === 'heal' || act === 'rest') {
+      tileEffect(loc, 'heal-flash');
+      floatText(loc, `+${extra.amount} HP`, 'heal');
+    }
+    pushSub('action', agent, msg);
+    return;
+  }
+
+  // ---- DRAMA ----
+  if (type === 'drama') {
+    pushSub('drama', agent, msg);
+    return;
+  }
+
+  // ---- EVENT ----
+  if (type === 'event') {
+    pushSub('event', null, msg);
+    if (extra && extra.damage && extra.location) {
+      tileEffect(extra.location, 'combat-flash');
+      floatText(extra.location, `-${extra.damage} HP`, 'dmg');
+    }
+    return;
+  }
+
+  // ---- TURN HEADER ----
+  if (type === 'turn') {
+    activeTurn = null;
+    clearBubbles();
+    document.querySelectorAll('.tile').forEach(t => t.classList.remove('active-loc'));
+    document.getElementById('spotlight').classList.remove('on');
+    const m = msg.match(/LƯỢT (\d+)/);
+    if (m) document.getElementById('turn-num').textContent = m[1];
+    return;
+  }
+
+  // ---- GAMEOVER ----
+  if (type === 'gameover') {
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-pause').disabled = true;
+    document.getElementById('btn-stop').disabled = true;
+    document.getElementById('pdot').className = 'pulse-dot';
+    activeTurn = null;
+    clearBubbles();
+    document.getElementById('spotlight').classList.remove('on');
+    pushSub('event', null, msg);
+    return;
+  }
+}
+
+// ===== GAME CONTROLS =====
 function startGame() {
   fetch('/start', {method:'POST'}).then(() => {
     document.getElementById('btn-start').disabled = true;
     document.getElementById('btn-pause').disabled = false;
     document.getElementById('btn-stop').disabled = false;
-    document.getElementById('status-dot').className = 'status-dot running';
-    allLogs = [];
-    activeTurnAgent = null;
-    clearAllBubbles();
-    document.getElementById('log-body').innerHTML = '';
-    document.getElementById('agents-list').innerHTML = '';
+    document.getElementById('pdot').className = 'pulse-dot on';
+    allAgents = []; agentData = {}; agentColors = {}; agentRgb = {};
+    activeTurn = null; activeBubbles = {}; subQueue = []; killFeedItems = [];
+    document.getElementById('agents-bar').innerHTML = '';
+    document.querySelectorAll('.tile .tile-body').forEach(b => b.innerHTML = '');
+    document.getElementById('subtitle-bar').innerHTML = '';
+    document.getElementById('kill-feed').innerHTML = '';
+    document.getElementById('turn-num').textContent = '0';
     connectStream();
   });
 }
-
 function pauseGame() {
   fetch('/pause', {method:'POST'}).then(r=>r.json()).then(d => {
     const btn = document.getElementById('btn-pause');
-    const dot = document.getElementById('status-dot');
-    if (d.paused) {
-      btn.textContent = '▶ Tiếp tục';
-      dot.className = 'status-dot paused';
-    } else {
-      btn.textContent = '⏸ Tạm dừng';
-      dot.className = 'status-dot running';
-    }
+    const dot = document.getElementById('pdot');
+    btn.textContent = d.paused ? '▶ Resume' : '⏸ Pause';
+    dot.className = d.paused ? 'pulse-dot pau' : 'pulse-dot on';
   });
 }
-
 function stopGame() {
   fetch('/stop', {method:'POST'}).then(() => {
     document.getElementById('btn-start').disabled = false;
     document.getElementById('btn-pause').disabled = true;
     document.getElementById('btn-stop').disabled = true;
-    document.getElementById('status-dot').className = 'status-dot';
-    activeTurnAgent = null;
-    clearAllBubbles();
-    document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
-    if (evtSource) { evtSource.close(); evtSource = null; }
+    document.getElementById('pdot').className = 'pulse-dot';
+    document.getElementById('btn-pause').textContent = '⏸ Pause';
+    activeTurn = null; clearBubbles();
+    document.getElementById('spotlight').classList.remove('on');
+    if (evtSrc) { evtSrc.close(); evtSrc = null; }
   });
 }
-
+function setSpeed(val) {
+  document.getElementById('speed-val').textContent = val;
+  fetch('/set_speed', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({speed: parseFloat(val)}) });
+}
 function connectStream() {
-  if (evtSource) evtSource.close();
-  evtSource = new EventSource('/stream');
-  evtSource.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-    if (data.type === 'ping') return;
-    if (data.type === 'state_update') {
-      updateAgents(data.agents);
-      return;
-    }
-    allLogs.push(data);
-    appendLogEntry(data);
-
-    // --- Xử lý Hiệu ứng Đồ họa dựa trên Metadata sự kiện ---
-    if (data.type === 'thinking') {
-      activeTurnAgent = data.agent;
-      // Cập nhật highlight thẻ nhân vật ở cột trái
-      document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
-      const card = document.querySelector(`.agent-card[data-agent="${data.agent}"]`);
-      if (card) card.classList.add('active-turn');
-
-      // Reset tất cả bong bóng của các Agent khác, tạo bong bóng suy nghĩ cho Agent hiện tại
-      clearAllBubbles();
-      setAgentBubble(data.agent, '⚡ Đang suy nghĩ...', 'thinking-style');
-    }
-    else if (data.type === 'thought' && data.extra && data.extra.reasoning) {
-      setAgentBubble(data.agent, `💭 ${data.extra.reasoning}`, 'thought-style');
-    }
-    else if (data.type === 'dialogue' && data.extra && data.extra.dialogue) {
-      setAgentBubble(data.agent, `🗣️ "${data.extra.dialogue}"`, 'dialogue-style');
-    }
-
-    if (data.extra && data.extra.location) {
-      const loc = data.extra.location;
-      
-      if (data.type === 'combat') {
-        showFloatingText(loc, `-${data.extra.damage} HP`, 'damage');
-      } 
-      else if (data.type === 'death') {
-        showFloatingText(loc, `💀 TỬ NẠN`, 'death');
-      } 
-      else if (data.type === 'action') {
-        const act = data.extra.action;
-        if (act === 'heal' || act === 'rest') {
-          showFloatingText(loc, `+${data.extra.amount} HP`, 'heal');
-        }
-      }
-    }
-
-    if (data.type === 'turn') {
-      const m = data.msg.match(/LƯỢT (\d+)/);
-      if (m) document.getElementById('turn-num').textContent = m[1];
-    }
-    if (data.type === 'gameover') {
-      document.getElementById('btn-start').disabled = false;
-      document.getElementById('btn-pause').disabled = true;
-      document.getElementById('btn-stop').disabled = true;
-      document.getElementById('status-dot').className = 'status-dot';
-      
-      // Xóa tất cả các trạng thái hoạt động khi kết thúc game
-      activeTurnAgent = null;
-      document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active-turn'));
-      clearAllBubbles();
-    }
-  };
+  if (evtSrc) evtSrc.close();
+  evtSrc = new EventSource('/stream');
+  evtSrc.onmessage = e => { try { onEvent(JSON.parse(e.data)); } catch(err) { console.error(err); } };
 }
 
-// Load state on page load
+// Load initial state
 fetch('/state').then(r=>r.json()).then(d => {
-  if (d.agents.length) updateAgents(d.agents);
-  document.getElementById('turn-num').textContent = d.turn;
+  if (d.agents && d.agents.length) {
+    allAgents = d.agents;
+    allAgents.forEach(a => { agentData[a.name]=a; agentColors[a.name]=a.color; agentRgb[a.name]=hexToRgb(a.color); });
+    rebuildMap(); rebuildAgentsBar();
+    document.getElementById('turn-num').textContent = d.turn;
+    if (d.running) {
+      document.getElementById('btn-start').disabled = true;
+      document.getElementById('btn-pause').disabled = false;
+      document.getElementById('btn-stop').disabled = false;
+      document.getElementById('pdot').className = 'pulse-dot on';
+      connectStream();
+    }
+  }
 });
 </script>
 </body>

@@ -65,12 +65,11 @@ game_state = {"running": False, "paused": False, "turn": 0, "agents": [], "log":
 game_thread = None
 
 # ========== AGENT TEMPLATES ==========
+# 3 agents for testing - bộ trio kịch tính nhất
 AGENT_TEMPLATES = [
-    {"name": "Kael",  "personality": "chiến binh hung hãn, thích đánh trực tiếp, kiêu ngạo, không sợ chết", "trait": "CHIẾN BINH", "color": "#ff4444"},
-    {"name": "Lyra",  "personality": "kẻ trộm xảo quyệt, thích đâm sau lưng, hay nói dối, chỉ tin bản thân", "trait": "SÁT THỦ",   "color": "#44ddff"},
-    {"name": "Brom",  "personality": "kẻ sinh tồn thận trọng, tránh chiến đấu khi có thể, hay tích trữ đồ, paranoid", "trait": "SINH TỒN", "color": "#44ff88"},
-    {"name": "Zara",  "personality": "kẻ thao túng duyên dáng, hay dụ dỗ liên minh rồi phản bội", "trait": "MƯU SĨ",   "color": "#ffdd44"},
-    {"name": "Drex",  "personality": "hiệp sĩ danh dự, có nguyên tắc, bảo vệ kẻ yếu, ghét kẻ phản bội", "trait": "HIỆP SĨ",  "color": "#dd88ff"},
+    {"name": "Kael",  "personality": "chiến binh hung hãn, thích đánh trực tiếp, kiêu ngạo, không sợ chết, luôn muốn đối đầu trực tiếp", "trait": "CHIẾN BINH", "color": "#ff4444"},
+    {"name": "Lyra",  "personality": "sát thủ xảo quyệt, thích đâm sau lưng, hay nói dối, chỉ tin bản thân, luôn tìm cách phản bội khi có lợi", "trait": "SÁT THỦ",   "color": "#44ddff"},
+    {"name": "Zara",  "personality": "kẻ thao túng duyên dáng, hay dụ dỗ người khác lập liên minh rồi phản bội khi thuận lợi, rất thông minh", "trait": "MƯU SĨ",   "color": "#ffdd44"},
 ]
 
 MAP_LOCATIONS = ["Rừng Tối", "Lâu Đài Hoang", "Đầm Lầy", "Đèo Núi", "Làng Bỏ Hoang", "Hang Động"]
